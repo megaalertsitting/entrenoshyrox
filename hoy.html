@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hyrox · Entreno de hoy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;500;600;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#101010;--yellow:#FFDD00;--board:#FAF9F5;--wall:#EDEBE6;--steel:#B9B7B2;--muted:#6E6C67;--tent:#C2410C;--tent-bg:#FDF4EC}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Barlow',sans-serif;background:var(--wall);color:var(--ink);line-height:1.5;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;
+    background-image:radial-gradient(circle at 20% 10%, rgba(255,221,0,.1), transparent 45%);
+  }
+  .fecha{font-weight:700;letter-spacing:.3em;text-transform:uppercase;font-size:.75rem;color:var(--muted);margin-bottom:14px;text-align:center}
+  .card{
+    background:var(--board);border:1px solid var(--steel);border-radius:8px;max-width:520px;width:100%;
+    box-shadow:0 1px 0 #fff inset, 0 12px 30px rgba(16,16,16,.15);padding:0 0 22px;position:relative;
+  }
+  .card::before{content:"";display:block;height:8px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,#DDDBD6,#B9B7B2)}
+  .card.tent{background:var(--tent-bg);border:2px dashed var(--tent)}
+  .card.tent::before{background:repeating-linear-gradient(45deg,var(--tent) 0 12px,#EFB699 12px 24px)}
+  .card-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px 0;gap:10px}
+  h1{font-family:'Anton';font-size:1.5rem;letter-spacing:.02em;text-transform:uppercase}
+  .badge{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:5px 12px;border-radius:3px;white-space:nowrap}
+  .badge.ind{border:2px solid var(--ink);color:var(--ink)}
+  .badge.t2{background:var(--yellow);color:var(--ink)}
+  .badge.t3{background:var(--ink);color:var(--yellow)}
+  .badge.tentb{background:var(--tent);color:#fff}
+  .wod-type{font-family:'Permanent Marker',cursive;font-size:1.3rem;padding:12px 22px 0}
+  .wod-type u{text-decoration-color:var(--yellow);text-decoration-thickness:4px;text-underline-offset:4px}
+  ul{list-style:none;padding:14px 22px 0;font-size:1.02rem}
+  li{padding:7px 0 7px 22px;position:relative;border-bottom:1px dashed #DDDBD4}
+  li:last-child{border-bottom:none}
+  li::before{content:"›";position:absolute;left:2px;font-weight:700;color:#b0aea5}
+  .vacio{
+    font-family:'Anton';font-size:1.4rem;text-align:center;padding:40px 22px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;
+  }
+  footer{margin-top:18px;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="fecha" id="fecha"></div>
+<div class="card" id="card"></div>
+<footer>Hyrox Training Club</footer>
+
+<script>
+  // Sesiones de septiembre 2026 (reales 1-18, previstas por ciclo 19-30)
+  const SESIONES = {
+    "2026-09-01": { formato:"ind", tent:false, tipo:"3 Rounds · 1' ON / 1' Run", items:["Ski-Erg","Row","Burpees BJ","Alt Reverse Lunges 20/10 kg","Wallballs 9/6 kg","Run en terraza"] },
+    "2026-09-02": { formato:"t2", tent:false, tipo:"AMRAP 5' × 6 rondas · 1' rest", items:["Máx mts Ski-Erg","Máx Burpees BJ","Máx mts Sled Push 125/75 kg","Máx mts Row","Máx mts Run","Máx Wallballs"] },
+    "2026-09-03": { formato:"t3", tent:false, tipo:"AMRAP 6' × 4 estaciones · 1' rest", items:["Máx mts Ski","Máx Burpees BJ","Máx mts Row","Máx Wallballs","A: 200 m Run · B y C mts/reps"] },
+    "2026-09-04": { formato:"t3", tent:false, tipo:"AMRAP 30'", items:["1000 m Run (juntos)","150 Wallballs 9/6 kg","1500 m Row (150 máx pp)","1000 m Run (juntos)","150 Alt Reverse Lunges 20/10 kg","1500 m Ski-Erg (150 máx)","1000 m Run (juntos)"] },
+    "2026-09-05": { formato:"ind", tent:false, tipo:"3 Rounds · 1' ON / 30\" OFF", items:["Máx mts Ski-Erg","Máx mts Shuttle Run 10 m","Máx Burpees Broad Jumps","Máx mts Row","Máx Alt Lunges 20/10 kg","Máx mts Farmer Carry 24/16 kg","Máx Wallballs 9/6 kg"] },
+    "2026-09-07": { formato:"ind", tent:false, tipo:"5' por movimiento", items:["Intervalos: 30\"/30\" · 40\"/20\" · 50\"/10\" · 1'/1'","R1 · Ski-Erg","R2 · Burpees BJ","R3 · Row","R4 · 10 m Shuttle Run","R5 · Alt Lunges 20/10","R6 · Wallballs 9/6"] },
+    "2026-09-10": { formato:"t3", tent:false, tipo:"For Time · TC 30'", items:["1000 m Ski-Erg","100 m Sled Push","100 Burpees Broad Jump","1000 m Row","100 m Walking Lunge","100 Wallballs","A y B reps · C 200 m Run"] },
+    "2026-09-11": { formato:"t2", tent:false, tipo:"AMRAP 5' × 6 rondas", items:["R1 · A: máx Burpees · B: 200/150 m Ski-Erg","R2 · A: máx Wallballs 9/6 · B: 200/150 m Row","R3 · A: máx Alt Lunges 20/10 · B: 200 m Run"] },
+    "2026-09-13": { formato:"t2", tent:false, tipo:"AMRAP 10' × 3 sets · 1' rest", items:["1) 600 m Run (juntos) · 600 m Ski-Erg · máx Burpees BJ","2) 600 m Run (juntos) · 600 m Row · máx Wallballs 9/6","3) 600 m Run (juntos) · 400 m Farmer Carry · máx Alt Lunges 20/10"] },
+    "2026-09-14": { formato:"ind", tent:false, tipo:"EMOM × 5 rounds", items:["Min 1 · 12/10 cal Ski-Erg","Min 2 · 12/10 cal Row","Min 3 · 20 m Burpees Broad Jump","Min 4 · 20 Alt Reverse Lunges 20/10 kg","Min 5 · 15 Wallballs 9/6 kg","Min 6 · Rest"] },
+    "2026-09-15": { formato:"t2", tent:false, tipo:"AMRAP 10' × 3 rounds · 1' rest", items:["20 Reverse Lunges 20/10 kg + 200 m Run","150 m Ski-Erg + 10 Burpees","150 m Row + 15 Wallballs 9/6 kg","A seguido · B rest y cambio"] },
+    "2026-09-16": { formato:"t3", tent:false, tipo:"AMRAP 30'", items:["400 m Carrera · 500 m Ski","20 Burpees sincro","500 m Row · 30 Wallballs","400 m Carrera · 500 m Ski","20 Burpees sincro · 500 m Row · 30 Wallballs","2 trabajan, 1 descansa · cambios por movimiento"] },
+    "2026-09-17": { formato:"t3", tent:false, tipo:"EMOM 15' + EMOM 15'", items:["Bloque 1 · Min 1 (A): 200/150 m Row · Min 2 (B): 15 Wallballs 9/6 · Min 3 (C): Rest","Bloque 2 · Min 1 (A): 200/150 m Ski-Erg · Min 2 (B): 15 Burpees · Min 3 (C): Rest"] },
+    "2026-09-18": { formato:"t2", tent:false, tipo:"AMRAP 10' × 3 sets · 1' rest", items:["1) 800 m Run (juntos) · 600 m Ski-Erg · máx Burpee","2) 800 m Run (juntos) · 600 m Row · máx Wallballs 9/6","3) 800 m Run (juntos) · 400 m Farmer Carry · máx Alt Lunges 20/10"] },
+    "2026-09-19": { formato:"t2", tent:true, tipo:"For Time", items:["1000 m Row · 50 Burpees · 400 m carrera (juntos)","1000 m Ski-Erg · 50 Wallballs 9/6 · 400 m carrera (juntos)","50 Walking Lunges · 50 m Sled Push 75 kg + trineo · 400 m carrera (juntos)"] },
+    "2026-09-21": { formato:"t2", tent:true, tipo:"For Time · TC 30'", items:["400 m Run · 1000 m Ski-Erg","400 m Run · 100 m Burpees BJ","400 m Run · 1000 m Row","400 m Run · 100 Wallballs 9/6"] },
+    "2026-09-22": { formato:"ind", tent:true, tipo:"3 Rounds · 1' ON / 1' Run", items:["Ski-Erg","Row","Burpees BJ","Alt Reverse Lunges 20/10 kg","Wallballs 9/6 kg"] },
+    "2026-09-23": { formato:"t2", tent:true, tipo:"AMRAP 5' × 6 rondas · 1' rest", items:["Máx mts Ski-Erg","Máx Burpees BJ","Máx mts Sled Push 125/75","Máx mts Row","Máx mts Run","Máx Wallballs"] },
+    "2026-09-24": { formato:"t3", tent:true, tipo:"AMRAP 6' × 4 estaciones · 1' rest", items:["Máx mts Ski","Máx Burpees BJ","Máx mts Row","Máx Wallballs","A: 200 m Run · B y C mts/reps"] },
+    "2026-09-25": { formato:"t3", tent:true, tipo:"AMRAP 30'", items:["1000 m Run (juntos) · 150 Wallballs 9/6","1500 m Row (150 máx pp) · 1000 m Run","150 Alt Reverse Lunges 20/10 · 1500 m Ski · 1000 m Run"] },
+    "2026-09-26": { formato:"ind", tent:true, tipo:"3 Rounds · 1' ON / 30\" OFF", items:["Ski-Erg","Shuttle Run 10 m","Burpees BJ","Row","Alt Lunges 20/10","Farmer Carry 24/16","Wallballs 9/6"] },
+    "2026-09-28": { formato:"ind", tent:true, tipo:"5' por movimiento", items:["Intervalos 30\"/30\" · 40\"/20\" · 50\"/10\" · 1'/1'","Ski · Burpees BJ · Row · Shuttle 10 m · Alt Lunges · Wallballs"] }
+  };
+
+  const FORMATOS = { ind:["Individual","ind"], t2:["Team of 2","t2"], t3:["Team of 3","t3"] };
+
+  const hoy = new Date();
+  const iso = hoy.getFullYear() + '-' + String(hoy.getMonth()+1).padStart(2,'0') + '-' + String(hoy.getDate()).padStart(2,'0');
+  document.getElementById('fecha').textContent = hoy.toLocaleDateString('es-ES', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+  const card = document.getElementById('card');
+  const s = SESIONES[iso];
+  if(!s){
+    card.innerHTML = '<div class="vacio">Hoy no hay entreno registrado</div>';
+  } else {
+    const [fLabel, fClass] = FORMATOS[s.formato];
+    if(s.tent) card.classList.add('tent');
+    card.innerHTML =
+      '<div class="card-head"><h1>Entreno de hoy</h1>' +
+      '<span class="badge ' + (s.tent ? 'tentb' : fClass) + '">' + (s.tent ? 'Previsto · ' : '') + fLabel + '</span></div>' +
+      '<div class="wod-type"><u>' + s.tipo + '</u></div>' +
+      '<ul>' + s.items.map(i => '<li>' + i + '</li>').join('') + '</ul>';
+  }
+</script>
+
+</body>
+</html>
