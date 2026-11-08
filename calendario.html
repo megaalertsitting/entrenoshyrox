@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calendario Hyrox</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: pizarra de box — cabecera con selector de semana, rejilla de días tipo tablón, hoy resaltado con cinta amarilla */
+:root{
+  --bg:#eef0f2; --panel:#ffffff; --ink:#15191e; --muted:#5d6670; --line:#d5dade;
+  --accent:#ffd400; --accent-ink:#15191e; --chip:#e4e8ec;
+  --wA:#2d6cdf; --wB:#d2452f; --wC:#1f9a6b;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,Segoe UI,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101317; --panel:#191e24; --ink:#eef1f4; --muted:#9aa4ae; --line:#2b323a;
+  --accent:#ffd400; --accent-ink:#15191e; --chip:#232a32;
+  --wA:#6b9bff; --wB:#ff7a63; --wC:#3fcf96; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101317; --panel:#191e24; --ink:#eef1f4; --muted:#9aa4ae; --line:#2b323a;
+  --accent:#ffd400; --accent-ink:#15191e; --chip:#232a32;
+  --wA:#6b9bff; --wB:#ff7a63; --wC:#3fcf96; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(40px,7vw,64px);line-height:.9;margin:4px 0 0;letter-spacing:.01em;text-transform:uppercase;text-wrap:balance}
+h1 span{background:var(--accent);color:var(--accent-ink);padding:0 .12em}
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px;gap:4px}
+.seg button{font:600 15px var(--body);border:0;background:transparent;color:var(--muted);padding:9px 18px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.weekbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;border-top:3px solid var(--ink);padding-top:14px}
+.badge{font-family:var(--display);font-weight:800;font-size:22px;color:#fff;width:42px;height:42px;display:grid;place-items:center;border-radius:6px}
+.weekbar h2{font-family:var(--display);font-weight:700;font-size:28px;margin:0;text-transform:uppercase;letter-spacing:.02em}
+.weekbar .range{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.cycle{margin-left:auto;display:flex;gap:6px;align-items:center;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.cycle i{font-style:normal;width:26px;height:26px;display:grid;place-items:center;border-radius:4px;background:var(--chip);color:var(--muted);font-weight:500}
+.cycle i.on{color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.day{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0;position:relative}
+.day.today{border:2px solid var(--ink);box-shadow:0 0 0 4px var(--accent)}
+.day.past{opacity:.6}
+.dhead{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.dname{font-family:var(--display);font-weight:700;font-size:22px;text-transform:uppercase;letter-spacing:.03em}
+.ddate{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tag{align-self:flex-start;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);padding:3px 7px;border-radius:3px}
+.fmt{font-family:var(--display);font-weight:700;font-size:20px;line-height:1.1;text-transform:uppercase}
+.team{font-size:13px;color:var(--muted);font-weight:500}
+ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;border-top:1px dashed var(--line);padding-top:10px}
+li{font-size:14px;padding-left:14px;position:relative}
+li::before{content:"";position:absolute;left:0;top:.62em;width:6px;height:2px;background:var(--muted)}
+.note{font-size:12.5px;color:var(--muted);margin-top:auto;padding-top:4px}
+footer{font-size:13px;color:var(--muted);max-width:70ch}
+@media (max-width:520px){.cycle{margin-left:0}.seg{width:100%}.seg button{flex:1}}
+@media (prefers-reduced-motion:no-preference){.day{transition:transform .15s}.day:hover{transform:translateY(-2px)}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Ciclo de 3 semanas · A → B → C</div>
+      <h1>Calendario <span>Hyrox</span></h1>
+    </div>
+    <div class="seg" role="group" aria-label="Elegir semana">
+      <button id="btn-this" aria-pressed="true">Esta semana</button>
+      <button id="btn-next" aria-pressed="false">Semana que viene</button>
+    </div>
+  </header>
+
+  <div class="weekbar">
+    <div class="badge" id="wbadge">A</div>
+    <div>
+      <h2 id="wtitle">Semana A</h2>
+      <div class="range" id="wrange"></div>
+    </div>
+    <div class="cycle" aria-label="Posición en el ciclo">ciclo <i id="cA">A</i><i id="cB">B</i><i id="cC">C</i></div>
+  </div>
+
+  <section class="grid" id="grid" aria-live="polite"></section>
+
+  <footer>Basado en las fotos de la pizarra y confirmado día a día del 19 oct al 8 nov 2026. Sábado y domingo repiten la misma clase. Entre ciclos pueden cambiar distancias o algún ejercicio, pero el formato de cada día se mantiene.</footer>
+</div>
+
+<script>
+const WEEKS = {
+  A:{name:"Semana A", days:[
+    {fmt:"3 Rounds · 1' ON / 1' RUN", team:"Individual", items:["Ski-Erg","Row","Burpees broad jumps","Alt reverse lunges","Wall balls 9/6"]},
+    {fmt:"For Time", team:"Teams of 2", items:["50 burpees","1000 m Ski-Erg","50 burpees","100 m walking lunge 20/10","50 burpees","1000 m Row","50 burpees","100 wall balls 9/6"], note:"Otras vueltas: 400 m run entre estaciones + 100 m BBJ."},
+    {fmt:"AMRAP 6' × 5", team:"Teams of 3", items:["A: 200 m run","B/C: máx metros o reps por estación","Sled push + farmer carry alternando cada 30\""]},
+    {fmt:"AMRAP 5' × 6 rounds", team:"Teams of 2", items:["Máx Ski-Erg","Máx burpees broad jumps","Máx sled push 125/75","Máx Row","Máx run","Máx wall balls 9/6"]},
+    {fmt:"3 Rondas · 1' ON / 30\" OFF", team:"Individual", items:["Ski-Erg","Run","Row","Burpees broad jumps","Walking lunges","Wall balls 9/6","Farmer carry 24/16"]},
+    {fmt:"AMRAP 30'", team:"Teams of 3", weekend:true, items:["400 m run (juntos)","90 wall balls 9/6","900 m Row (máx 150 m p/pers)","20 burpees synchro","900 m Ski (máx 150 m p/pers)","90 alt reverse lunges 20/10"]}
+  ]},
+  B:{name:"Semana B", days:[
+    {fmt:"AMRAP 8' × 3 rounds", team:"Teams of 3", items:["Máx burpees broad jumps · B: 200 m Row · C: rest","Máx wall balls · B: 200 m Ski-Erg · C: rest","Máx alt lunges · B: 200 m run · C: rest"]},
+    {fmt:"5' × movimiento", team:"Individual", items:["30\" ON / 30\" OFF","40\" ON / 20\" OFF","50\" ON / 10\" OFF","1' ON / 1' OFF","R1 Ski · R2 Burpees · R3 Row · R4 Alt lunges 20/10 · R5 Wall balls 9/6"]},
+    {fmt:"For Time · TC 30'", team:"Teams of 3", items:["1000 m Ski-Erg","100 m sled push","100 burpees broad jumps","1000 m Row","100 m walking lunge","100 wall balls"], note:"A + B reps · C: 200 m run"},
+    {fmt:"AMRAP 6' × 5 rounds", team:"Teams of 3", items:["A 200 m run · B máx Row","A 200 m Ski-Erg · B máx BBJ","A 60 m farmer carry · B gorilla row","A 25 m sled push · B wall sit","A 15 wall balls · B máx lunge"], note:"C: rest en cada ronda"},
+    {fmt:"AMRAP 10' × 3 sets", team:"Teams of 2", items:["600 m run (juntos) + 600 m Ski-Erg + máx BBJ","600 m run (juntos) + 600 m Row + máx wall balls","600 m run (juntos) + farmer carry + máx lunges"]},
+    {fmt:"AMRAP 5' × 6 rounds", team:"Teams of 2", weekend:true, items:["A máx burpees ↔ B 200/150 m Ski-Erg","A máx wall balls ↔ B 200/150 m Row","A máx alt lunges 20/10 ↔ B 200 m run"]}
+  ]},
+  C:{name:"Semana C", days:[
+    {fmt:"EMOM × 5 rounds", team:"Individual", items:["12/10 cal Ski-Erg","12/10 cal Row","20 m burpees broad jumps","20 lunges / farmer hold","15 wall balls","Rest"]},
+    {fmt:"AMRAP 10' × 3", team:"Teams of 2", items:["20 reverse lunges 20/10 + 200 m run","150 m Ski-Erg + 20 m burpee broad jump","150 m Row + 15 wall balls 9/6"], note:"1' rest entre AMRAPs"},
+    {fmt:"AMRAP 30'", team:"Teams of 3", items:["400 m run","500 m Ski","20 burpees sincro","500 m Row","30 wall balls","…y repetir"], note:"2 trabajan, 1 descansa · cambios por movimiento"},
+    {fmt:"EMOM 15' × 2", team:"Teams of 3", items:["Bloque 1: Row / Wall balls / Rest","Bloque 2: Ski-Erg / Burpees / Rest"]},
+    {fmt:"AMRAP 10' × 3 sets", team:"Teams of 2", items:["800 m run (juntos) + 600 m Ski-Erg + máx BBJ","800 m run (juntos) + 600 m Row + máx wall balls","800 m run (juntos) + 400 m farmer carry 24/16 + máx alt lunges"]},
+    {fmt:"For Time", team:"Teams of 2", weekend:true, items:["400 m run (juntos) + 1000 m Row","100 burpees","1000 m Ski-Erg","100 wall balls","100 m lunges","100 m sled push 125/75"]}
+  ]}
+};
+const NAMES=["Lunes","Martes","Miércoles","Jueves","Viernes","Sáb · Dom"];
+const ORDER=["A","B","C"];
+const ANCHOR=new Date(2026,10,2); // lunes 2 nov 2026 = Semana A
+const COLORS={A:"var(--wA)",B:"var(--wB)",C:"var(--wC)"};
+const fmtD=d=>d.toLocaleDateString("es-ES",{day:"numeric",month:"short"}).replace(".","");
+
+function mondayOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const w=(x.getDay()+6)%7;x.setDate(x.getDate()-w);return x}
+function letterFor(mon){const weeks=Math.round((mon-ANCHOR)/(7*864e5));return ORDER[((weeks%3)+3)%3]}
+
+const today=new Date(); const todayKey=new Date(today.getFullYear(),today.getMonth(),today.getDate()).getTime();
+const thisMon=mondayOf(today);
+
+function render(offset){
+  const mon=new Date(thisMon); mon.setDate(mon.getDate()+offset*7);
+  const L=letterFor(mon), wk=WEEKS[L];
+  const sun=new Date(mon); sun.setDate(sun.getDate()+6);
+  document.getElementById("wbadge").textContent=L;
+  document.getElementById("wbadge").style.background=COLORS[L];
+  document.getElementById("wtitle").textContent=wk.name;
+  document.getElementById("wrange").textContent=fmtD(mon)+" – "+fmtD(sun)+" "+sun.getFullYear();
+  ORDER.forEach(k=>{const el=document.getElementById("c"+k);el.classList.toggle("on",k===L);el.style.background=k===L?COLORS[k]:""});
+  const grid=document.getElementById("grid"); grid.innerHTML="";
+  wk.days.forEach((d,i)=>{
+    const date=new Date(mon); date.setDate(date.getDate()+i);
+    const dates=[date.getTime()]; let label=fmtD(date);
+    if(d.weekend){const s=new Date(date);s.setDate(s.getDate()+1);dates.push(s.getTime());label=fmtD(date)+" · "+fmtD(s)}
+    const isToday=dates.includes(todayKey);
+    const isPast=Math.max(...dates)<todayKey;
+    const card=document.createElement("article");
+    card.className="day"+(isToday?" today":"")+(isPast?" past":"");
+    card.innerHTML=`<div class="dhead"><span class="dname">${NAMES[i]}</span><span class="ddate">${label}</span></div>`+
+      (isToday?`<span class="tag">Hoy</span>`:"")+
+      `<div><div class="fmt">${d.fmt}</div><div class="team">${d.team}</div></div>`+
+      `<ul>${d.items.map(t=>`<li>${t}</li>`).join("")}</ul>`+
+      (d.note?`<div class="note">${d.note}</div>`:"");
+    grid.appendChild(card);
+  });
+  document.getElementById("btn-this").setAttribute("aria-pressed",offset===0);
+  document.getElementById("btn-next").setAttribute("aria-pressed",offset===1);
+}
+document.getElementById("btn-this").onclick=()=>render(0);
+document.getElementById("btn-next").onclick=()=>render(1);
+render(0);
+</script>
+</body>
+</html>
